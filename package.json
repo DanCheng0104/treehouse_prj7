@@ -1,0 +1,25 @@
+{
+  "name": "treehouse_prj7",
+  "version": "1.0.0",
+  "description": "twitter api practice",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DanCheng0104/treehouse_prj7.git"
+  },
+  "keywords": [
+    "twitter"
+  ],
+  "author": "dan cheng",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/DanCheng0104/treehouse_prj7/issues"
+  },
+  "homepage": "https://github.com/DanCheng0104/treehouse_prj7#readme",
+  "dependencies": {
+    "twit": "^2.2.9"
+  }
+}
