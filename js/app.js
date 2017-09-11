@@ -55,7 +55,7 @@ T.get('account/verify_credentials', { skip_status: true })
           paras.users.push(user);
         });
 
-        T.get('direct_messages')
+        T.get('direct_messages',{count:5})
         .catch(function (err) {
           console.log('caught error', err.stack)
         })
