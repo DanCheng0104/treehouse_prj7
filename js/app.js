@@ -41,13 +41,27 @@ T.get('account/verify_credentials', { skip_status: true })
     		paras.tweets.push(t_content);
 
     	})
-    	T.get('friends/list',{count:1})
+    	T.get('friends/list',{count:5})
     	.catch(function (err) {
     		console.log('caught error', err.stack)
   		})
   		.then(function(result){
-  			console.log(result.data.users);
-  			//name,screen_name,profile_background_image_url
+        paras.users=[];
+        result.data.users.forEach(u=>{
+          const user = {};
+          user['name']=u.name;
+          user['screen_name']=u.screen_name;
+          user['profile_image_url']=u.profile_image_url;
+          paras.users.push(user);
+        });
+
+        T.get('direct_messages')
+        .catch(function (err) {
+          console.log('caught error', err.stack)
+        })
+        .then(function(result){
+          console.log(result.data);
+        });
   		});
 	 //    app.get('/',(req,res)=>{
 		// res.render('index',paras);
