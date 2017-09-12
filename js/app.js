@@ -133,7 +133,11 @@ T.get('account/verify_credentials', { skip_status: true })
 
 
 app.post('/', (req, res, next) =>{
- console.log(req.body.tweetText);
+  console.log(req.body.newTweet);
+  const newTweet = req.body.newTweet;
+  T.post('statuses/update', { status: newTweet}, function(err, data, response) {
+   console.log(data)
+  })
 });
 app.listen(3000,()=>{
  console.log('the app is running');
