@@ -123,7 +123,13 @@ T.get('account/verify_credentials', { skip_status: true })
     }
 
     paras.conversations = conversations;
-    console.log(paras.conversations);
+    for (convo in conversations['albertkun']){
+      console.log(conversations['albertkun'][convo].text);
+    }
+
+     app.get('/',(req,res)=>{
+  res.render('index',paras);
+    });
   }
 
 

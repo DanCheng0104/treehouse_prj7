@@ -96,19 +96,21 @@ block content
       .grid-33
         .app--section
           ul.app--message--list
-            li
-              h3
-                | Conversation with 
-                a Jill Spore
-              ul.app--message--conversation
-                li.app--message
-                  .app--avatar(style='background-image: url(images/f-spore.png)')
-                    img(src='images/f-spore.png')
-                  p.app--message--text How are things?
-                  p.app--message--timestamp 3 hours ago
-                li.app--message--me
-                  .app--avatar(style='background-image: url(images/m-spore.png)')
-                    img(src='images/m-spore.png')
-                  p.app--message--text
-                    | Great! How about you? Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-                  p.app--message--timestamp 2 hours ago
+            each convo in conversations
+              li
+                h3
+                  | Conversation with 
+                  a #{convo}
+                ul.app--message--conversation
+                  each index in conversations[convo]
+                    li.app--message
+                      .app--avatar(style='background-image: url(images/f-spore.png)')
+                        img(src='images/f-spore.png')
+                      p.app--message--text #{conversations[convo][index]['text']}
+                      p.app--message--timestamp 3 hours ago
+                    li.app--message--me
+                      .app--avatar(style='background-image: url(images/m-spore.png)')
+                        img(src='images/m-spore.png')
+                      p.app--message--text
+                        | Great! How about you? Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+                      p.app--message--timestamp 2 hours ago
