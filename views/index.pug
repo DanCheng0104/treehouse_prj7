@@ -20,12 +20,12 @@ block content
                 li
                   a Sign Out
     .app--tweet
-      form
+      form(action='/',method='post')
         .circle--fluid
           .circle--fluid--cell.circle--fluid--primary.align-bottom.app--tweet--post
             .app--avatar(style=`background-image: url(${profile_image_url})`)
               img(src=`${profile_image_url}`)
-            textarea#tweet-textarea.circle--textarea--input(placeholder="What's happening?")
+            textarea#tweet-textarea.circle--textarea--input(placeholder="What's happening?",name="newTweet")
             strong#tweet-char.app--tweet--char 140
           .circle--fluid--cell.align-bottom
             button.button-primary Tweet
@@ -96,21 +96,23 @@ block content
       .grid-33
         .app--section
           ul.app--message--list
-            each convo in conversations
+            each convo,index in conversations
               li
                 h3
                   | Conversation with 
-                  a #{convo}
+                  a #{index}
                 ul.app--message--conversation
-                  each index in conversations[convo]
+                  each element in convo
+                   if element.received == 1
                     li.app--message
-                      .app--avatar(style='background-image: url(images/f-spore.png)')
-                        img(src='images/f-spore.png')
-                      p.app--message--text #{conversations[convo][index]['text']}
-                      p.app--message--timestamp 3 hours ago
+                      .app--avatar(style=`background-image: url(${element.profile_image_url})`)
+                        img(src=`${element.profile_image_url}`)
+                      p.app--message--text #{element['text']}
+                      p.app--message--timestamp #{element['created_at']}
+                   if element.received == 0
                     li.app--message--me
-                      .app--avatar(style='background-image: url(images/m-spore.png)')
-                        img(src='images/m-spore.png')
-                      p.app--message--text
-                        | Great! How about you? Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-                      p.app--message--timestamp 2 hours ago
+                      .app--avatar(style=`background-image: url(${element.profile_image_url})`)
+                        img(src=`${element.profile_image_url}`)
+                      p.app--message--text #{element['text']}
+                      p.app--message--timestamp #{element['created_at']}
+

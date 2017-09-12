@@ -1,10 +1,13 @@
 const express = require('express');
+const bodyParser = require('body-parser');
 const Twit = require('twit');
 const config = require('../config.js');
 const T = new Twit(config);
 const app = express();
 app.set('view engine','pug');
 app.use(express.static('static'));
+app.use(bodyParser.urlencoded({extended: false}));
+app.use(bodyParser.json());
 const paras = {};
 
 T.get('account/verify_credentials', { skip_status: true })
@@ -123,19 +126,15 @@ T.get('account/verify_credentials', { skip_status: true })
     }
 
     paras.conversations = conversations;
-    for (convo in conversations['albertkun']){
-      console.log(conversations['albertkun'][convo].text);
-    }
-
-     app.get('/',(req,res)=>{
-  res.render('index',paras);
+    app.get('/',(req,res)=>{
+       res.render('index',paras);
     });
   }
 
 
-  //    app.get('/',(req,res)=>{
-  // res.render('index',{ screen_name: paras.screen_name});
-  //   });
+app.post('/', (req, res, next) =>{
+ console.log(req.body.tweetText);
+});
 app.listen(3000,()=>{
  console.log('the app is running');
 });
