@@ -20,6 +20,7 @@ block content
                 li
                   a Sign Out
     .app--tweet
+      
       form(action='/',method='post')
         .circle--fluid
           .circle--fluid--cell.circle--fluid--primary.align-bottom.app--tweet--post
@@ -116,3 +117,6 @@ block content
                       p.app--message--text #{element['text']}
                       p.app--message--timestamp #{element['created_at']}
 
+  
+  script(src='/socket.io/socket.io.js') 
+  script(src="js/client.js")

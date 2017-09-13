@@ -9,6 +9,8 @@ app.use(express.static('static'));
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json());
 const paras = {};
+const server = require('http').Server(app);
+const io = require('socket.io')(server);
 
 T.get('account/verify_credentials', { skip_status: true })
   .catch(function (err) {
@@ -137,8 +139,12 @@ app.post('/', (req, res, next) =>{
   const newTweet = req.body.newTweet;
   T.post('statuses/update', { status: newTweet}, function(err, data, response) {
    console.log(data)
+   //socket.emit('message', 'Hi server, how are you?');
   })
 });
+
+
+
 app.listen(3000,()=>{
  console.log('the app is running');
 });
