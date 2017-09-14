@@ -9,8 +9,8 @@ app.use(express.static('static'));
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json());
 const paras = {};
-const server = require('http').Server(app);
-const io = require('socket.io')(server);
+const server = require('http').createServer(app);
+const io = require('socket.io').listen(server);
 
 T.get('account/verify_credentials', { skip_status: true })
   .catch(function (err) {
@@ -133,18 +133,31 @@ T.get('account/verify_credentials', { skip_status: true })
     });
   }
 
+  app.get('/',(req,res)=>{
+     res.render('index',paras);
+  });
+  io.sockets.on('connection', function (socket) {
+    //socket.emit('message', 'You are connected!');
 
-app.post('/', (req, res, next) =>{
-  console.log(req.body.newTweet);
-  const newTweet = req.body.newTweet;
-  T.post('statuses/update', { status: newTweet}, function(err, data, response) {
-   console.log(data)
-   //socket.emit('message', 'Hi server, how are you?');
-  })
+    // When the server receives a “message” type signal from the client   
+    socket.on('message', function (newTweet) {
+      T.post('statuses/update', { status: newTweet}, function(err, data, response) {
+        const t_content = {};
+        t_content['created_at'] = data['created_at'];
+        t_content['text'] = data['text'];
+        t_content['retweet_count'] = data['retweet_count'];
+        t_content['favorite_count'] = data['favorite_count'];
+        t_content['name'] = paras.name;
+        t_content['screen_name'] = paras.screen_name;
+        t_content['profile_image_url'] = paras.profile_image_url;
+        paras.tweets.unshift(t_content);
+        io.sockets.emit('new_tweet', t_content);
+     },paras)
+    },paras); 
 });
 
 
 
-app.listen(3000,()=>{
+server.listen(3000,()=>{
  console.log('the app is running');
 });
