@@ -13,162 +13,177 @@ const paras = {};
 const server = require('http').createServer(app);
 const io = require('socket.io').listen(server);
 
-//app.use(getCredentials);
+app.use(getCredentials);
+app.use(getFriends);
+app.use(getTweets);
+app.use(getMessages);
 
+function getCredentials(req,res,next){
+  T.get('account/verify_credentials', { skip_status: true })
+    .catch(function (err) {
+      console.log('caught error', err.stack);
+      next();
+    })
+    .then(function (result) {
+      // `result` is an Object with keys "data" and "resp".
+      // `data` and `resp` are the same objects as the ones passed
+      // to the callback.
+      // See https://github.com/ttezel/twit#tgetpath-params-callback
+      // for details.
+      paras.bg = result.data.profile_banner_url;
+      paras.name = result.data.name;
+      paras.screen_name = result.data.screen_name;
+      paras.profile_image_url = result.data.profile_image_url;
+      paras.friends_count = result.data.friends_count;
+      paras.followers_count = result.data.followers_count;
+      next();
+    })
+}
 
-T.get('account/verify_credentials', { skip_status: true })
-  .catch(function (err) {
-    console.log('caught error', err.stack)
-  })
-  .then(function (result) {
-    // `result` is an Object with keys "data" and "resp".
-    // `data` and `resp` are the same objects as the ones passed
-    // to the callback.
-    // See https://github.com/ttezel/twit#tgetpath-params-callback
-    // for details.
-    
-    paras.bg = result.data.profile_banner_url;
-    paras.name = result.data.name;
-    paras.screen_name = result.data.screen_name;
-    paras.profile_image_url = result.data.profile_image_url;
-    paras.friends_count = result.data.friends_count;
-    paras.followers_count = result.data.followers_count;
+function getTweets(req,res,next){
+  T.get('statuses/user_timeline', { screen_name: paras.screen_name , count: 5})
+    .catch(function (err) {
+      console.log('caught error', err.stack);
+      next();
+    })
+    .then(function (result){
+       paras.tweets=[];
+       result.data.forEach(t=>{
+        const t_content = {};
+        t_content['created_at'] = t['created_at'];
+        t_content['text'] = t['text'];
+        t_content['retweet_count'] = t['retweet_count'];
+        t_content['favorite_count'] = t['favorite_count'];
+        paras.tweets.push(t_content);
+        })  
+        next();
+    })
+}
 
-          // t_content['profile_image_url'] = t['user']['profile_image_url'];
-    T.get('statuses/user_timeline', { screen_name: paras.screen_name , count: 5})
-      .catch(function (err) {
-    console.log('caught error', err.stack)
-  })
-  .then(function (result){
-     paras.tweets=[];
-     // console.log(result.data);
-     result.data.forEach(t=>{
-      const t_content = {};
-
-      t_content['created_at'] = t['created_at'];
-      t_content['text'] = t['text'];
-      t_content['retweet_count'] = t['retweet_count'];
-      t_content['favorite_count'] = t['favorite_count'];
-      paras.tweets.push(t_content);
-
-     })
-     T.get('friends/list',{count:5})
+function getFriends(req,res,next){
+  T.get('friends/list',{count:5})
      .catch(function (err) {
-      console.log('caught error', err.stack)
+      console.log('caught error', err.stack);
+      next();
+  })
+  .then(function(result){
+     paras.users=[];
+     result.data.users.forEach(u=>{
+       const user = {};
+       user['name']=u.name;
+       user['screen_name']=u.screen_name;
+       user['profile_image_url']=u.profile_image_url;
+       paras.users.push(user);       
+    })
+     next();
+  })
+
+}
+
+function getMessages(req,res,next){
+   T.get('direct_messages',{count:5})
+   .catch(function (err) {
+     console.log('caught error', err.stack);
+     next();
+   })
+   .then(function(result){
+     paras.messages=[];
+     result.data.forEach(m=>{
+        const msg={};
+        msg['text'] = m.text;
+        msg['sender_screen_name'] = m.sender_screen_name;
+        msg['profile_image_url'] = m.sender.profile_image_url;
+        msg['created_at'] = m.created_at;
+        msg['recipient_screen_name'] = m.recipient_screen_name;
+        msg['received'] = 1;
+        paras.messages.push(msg);
+     }) 
+     next();
+    })  
+}
+
+function getMessagesSent(req,res,next){
+    T.get('direct_messages/sent',{count:5})
+    .catch(function (err) {
+      console.log('caught error', err.stack);
+      next();
     })
     .then(function(result){
-         paras.users=[];
-         result.data.users.forEach(u=>{
-           const user = {};
-           user['name']=u.name;
-           user['screen_name']=u.screen_name;
-           user['profile_image_url']=u.profile_image_url;
-           paras.users.push(user);
-         });
+      result.data.forEach(m=>{
+       const msg={};
+       msg['text'] = m.text;
+       msg['sender_screen_name'] = m.sender_screen_name;
+       msg['profile_image_url'] = m.sender.profile_image_url;
+       msg['created_at'] = m.created_at;
+       msg['recipient_screen_name'] = m.recipient_screen_name;
+       msg['received'] = 0;
+       paras.messages.push(msg);
+      });              
+      createConversation(paras);
+      formatTime(paras);
+      next();
+    });     
+}
 
-         T.get('direct_messages',{count:5})
-         .catch(function (err) {
-           console.log('caught error', err.stack)
-         })
-         .then(function(result){
-           paras.messages=[];
-           result.data.forEach(m=>{
-            const msg={};
-            msg['text'] = m.text;
-            msg['sender_screen_name'] = m.sender_screen_name;
-            msg['profile_image_url'] = m.sender.profile_image_url;
-            msg['created_at'] = m.created_at;
-            msg['recipient_screen_name'] = m.recipient_screen_name;
-            msg['received'] = 1;
-            paras.messages.push(msg);
-           });
-            T.get('direct_messages/sent',{count:5})
-            .catch(function (err) {
-              console.log('caught error', err.stack)
-            })
-            .then(function(result){
-              result.data.forEach(m=>{
-               const msg={};
-               msg['text'] = m.text;
-               msg['sender_screen_name'] = m.sender_screen_name;
-               msg['profile_image_url'] = m.sender.profile_image_url;
-               msg['created_at'] = m.created_at;
-               msg['recipient_screen_name'] = m.recipient_screen_name;
-               msg['received'] = 0;
-               paras.messages.push(msg);
-              });              
-              createConversation(paras);
-              formatTime(paras);
-        
-            });          
-           
-         });
-    });
+function formatTime(paras){
+  paras.tweets.forEach(tweet=>{
+    tweet.created_at = moment(tweet.created_at).fromNow();
+  })
+}
+
+function sortMsg(a,b){
+ let comparison = 0;
+ return comparison = (a.created_at > b.created_at)?1:-1; 
+}
+
+function createConversation(paras){
+  let conversations = {};
+  paras.messages.forEach(m=>{
+   const send_screen_name = m['sender_screen_name'];
+   if ((m['received'] ==1)&&(send_screen_name !== paras.screen_name) && (!conversations.hasOwnProperty(send_screen_name))) {
+      conversations[send_screen_name]=[]
+      conversations[send_screen_name].push(m);
+   }
+  });
+  paras.messages.forEach(m=>{
+   const recipient_screen_name = m['recipient_screen_name'];
+   if (m['received'] ==0) {conversations[recipient_screen_name].push(m);}
   });
 
-  });
+  for (let key in conversations){
+    conversations[key].sort(sortMsg);
+  }
 
-  function formatTime(paras){
-    paras.tweets.forEach(tweet=>{
-      tweet.created_at = moment(tweet.created_at).fromNow();
+  for (let key in conversations){
+    conversations[key].forEach(convo=>{
+      convo.created_at = moment(convo.created_at).fromNow();
     })
-
   }
-  function sortMsg(a,b){
-   let comparison = 0;
-   return comparison = (a.created_at > b.created_at)?1:-1;
-   
-  }
-  function createConversation(paras){
-    let conversations = {};
-    paras.messages.forEach(m=>{
-     const send_screen_name = m['sender_screen_name'];
-     if ((m['received'] ==1)&&(send_screen_name !== paras.screen_name) && (!conversations.hasOwnProperty(send_screen_name))) {
-        conversations[send_screen_name]=[]
-        conversations[send_screen_name].push(m);
-     }
-    });
-    paras.messages.forEach(m=>{
-     const recipient_screen_name = m['recipient_screen_name'];
-     if (m['received'] ==0) {conversations[recipient_screen_name].push(m);}
-    });
+  paras.conversations = conversations;
+}
 
-    for (let key in conversations){
-      conversations[key].sort(sortMsg);
-    }
-
-    for (let key in conversations){
-      conversations[key].forEach(convo=>{
-        convo.created_at = moment(convo.created_at).fromNow();
-      })
-    }
-    paras.conversations = conversations;
-  }
-
-  app.get('/',(req,res)=>{
-     res.render('index',paras);
-  });
-  io.sockets.on('connection', function (socket) {
-    //socket.emit('message', 'You are connected!');
-
-    // When the server receives a “message” type signal from the client   
-    socket.on('message', function (newTweet) {
-      T.post('statuses/update', { status: newTweet}, function(err, data, response) {
-        const t_content = {};
-        t_content['created_at'] = moment(data['created_at']).fromNow();
-        t_content['text'] = data['text'];
-        t_content['retweet_count'] = data['retweet_count'];
-        t_content['favorite_count'] = data['favorite_count'];
-        t_content['name'] = paras.name;
-        t_content['screen_name'] = paras.screen_name;
-        t_content['profile_image_url'] = paras.profile_image_url;
-        paras.tweets.unshift(t_content);
-        io.sockets.emit('new_tweet', t_content);
-     },paras)
-    },paras); 
+app.get('/',(req,res)=>{
+   res.render('index',paras);
 });
+io.sockets.on('connection', function (socket) {
+  //socket.emit('message', 'You are connected!');
 
-
+  // When the server receives a “message” type signal from the client   
+  socket.on('message', function (newTweet) {
+    T.post('statuses/update', { status: newTweet}, function(err, data, response) {
+      const t_content = {};
+      t_content['created_at'] = moment(data['created_at']).fromNow();
+      t_content['text'] = data['text'];
+      t_content['retweet_count'] = data['retweet_count'];
+      t_content['favorite_count'] = data['favorite_count'];
+      t_content['name'] = paras.name;
+      t_content['screen_name'] = paras.screen_name;
+      t_content['profile_image_url'] = paras.profile_image_url;
+      paras.tweets.unshift(t_content);
+      io.sockets.emit('new_tweet', t_content);
+   },paras)
+  },paras); 
+});
 
 server.listen(3000,()=>{
  console.log('the app is running');
