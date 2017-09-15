@@ -1,0 +1,22 @@
+.grid-33
+  .app--section
+    ul.app--message--list
+      each convo,index in conversations
+        li
+          h3
+            | Conversation with 
+            a #{index}
+          ul.app--message--conversation
+            each element in convo
+             if element.received == 1
+              li.app--message
+                .app--avatar(style=`background-image: url(${element.profile_image_url})`)
+                  img(src=`${element.profile_image_url}`)
+                p.app--message--text #{element['text']}
+                p.app--message--timestamp #{element['created_at']}
+             if element.received == 0
+              li.app--message--me
+                .app--avatar(style=`background-image: url(${element.profile_image_url})`)
+                  img(src=`${element.profile_image_url}`)
+                p.app--message--text #{element['text']}
+                p.app--message--timestamp #{element['created_at']}

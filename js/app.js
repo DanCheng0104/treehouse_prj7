@@ -4,6 +4,7 @@ const Twit = require('twit');
 const config = require('../config.js');
 const T = new Twit(config);
 const app = express();
+const moment = require('moment');
 app.set('view engine','pug');
 app.use(express.static('static'));
 app.use(bodyParser.urlencoded({extended: false}));
@@ -90,20 +91,24 @@ T.get('account/verify_credentials', { skip_status: true })
                msg['recipient_screen_name'] = m.recipient_screen_name;
                msg['received'] = 0;
                paras.messages.push(msg);
-              });
+              });              
               createConversation(paras);
+              formatTime(paras);
         
             });          
            
          });
     });
-  //    app.get('/',(req,res)=>{
-  // res.render('index',paras);
-  //   });
   });
 
   });
 
+  function formatTime(paras){
+    paras.tweets.forEach(tweet=>{
+      tweet.created_at = moment(tweet.created_at).fromNow();
+    })
+
+  }
   function sortMsg(a,b){
    let comparison = 0;
    return comparison = (a.created_at > b.created_at)?1:-1;
@@ -127,10 +132,12 @@ T.get('account/verify_credentials', { skip_status: true })
       conversations[key].sort(sortMsg);
     }
 
+    for (let key in conversations){
+      conversations[key].forEach(convo=>{
+        convo.created_at = moment(convo.created_at).fromNow();
+      })
+    }
     paras.conversations = conversations;
-    app.get('/',(req,res)=>{
-       res.render('index',paras);
-    });
   }
 
   app.get('/',(req,res)=>{
@@ -143,7 +150,7 @@ T.get('account/verify_credentials', { skip_status: true })
     socket.on('message', function (newTweet) {
       T.post('statuses/update', { status: newTweet}, function(err, data, response) {
         const t_content = {};
-        t_content['created_at'] = data['created_at'];
+        t_content['created_at'] = moment(data['created_at']).fromNow();
         t_content['text'] = data['text'];
         t_content['retweet_count'] = data['retweet_count'];
         t_content['favorite_count'] = data['favorite_count'];
