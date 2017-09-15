@@ -13,6 +13,9 @@ const paras = {};
 const server = require('http').createServer(app);
 const io = require('socket.io').listen(server);
 
+//app.use(getCredentials);
+
+
 T.get('account/verify_credentials', { skip_status: true })
   .catch(function (err) {
     console.log('caught error', err.stack)
@@ -23,6 +26,8 @@ T.get('account/verify_credentials', { skip_status: true })
     // to the callback.
     // See https://github.com/ttezel/twit#tgetpath-params-callback
     // for details.
+    
+    paras.bg = result.data.profile_banner_url;
     paras.name = result.data.name;
     paras.screen_name = result.data.screen_name;
     paras.profile_image_url = result.data.profile_image_url;
