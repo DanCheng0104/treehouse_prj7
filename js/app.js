@@ -13,6 +13,9 @@ const paras = {};
 const server = require('http').createServer(app);
 const io = require('socket.io').listen(server);
 
+//app.use(getCredentials);
+
+
 T.get('account/verify_credentials', { skip_status: true })
   .catch(function (err) {
     console.log('caught error', err.stack)
@@ -23,6 +26,8 @@ T.get('account/verify_credentials', { skip_status: true })
     // to the callback.
     // See https://github.com/ttezel/twit#tgetpath-params-callback
     // for details.
+    
+    paras.bg = result.data.profile_banner_url;
     paras.name = result.data.name;
     paras.screen_name = result.data.screen_name;
     paras.profile_image_url = result.data.profile_image_url;
@@ -47,6 +52,7 @@ T.get('account/verify_credentials', { skip_status: true })
       paras.tweets.push(t_content);
 
      })
+     //get followers
      T.get('friends/list',{count:5})
      .catch(function (err) {
       console.log('caught error', err.stack)
@@ -60,7 +66,7 @@ T.get('account/verify_credentials', { skip_status: true })
            user['profile_image_url']=u.profile_image_url;
            paras.users.push(user);
          });
-
+         //get messages sent from others
          T.get('direct_messages',{count:5})
          .catch(function (err) {
            console.log('caught error', err.stack)
@@ -77,6 +83,7 @@ T.get('account/verify_credentials', { skip_status: true })
             msg['received'] = 1;
             paras.messages.push(msg);
            });
+           //get messages sent by me
             T.get('direct_messages/sent',{count:5})
             .catch(function (err) {
               console.log('caught error', err.stack)
@@ -103,17 +110,20 @@ T.get('account/verify_credentials', { skip_status: true })
 
   });
 
+ //format the time to be like how long ago
   function formatTime(paras){
     paras.tweets.forEach(tweet=>{
       tweet.created_at = moment(tweet.created_at).fromNow();
     })
 
   }
+  //sort the message based on the time they created
   function sortMsg(a,b){
    let comparison = 0;
    return comparison = (a.created_at > b.created_at)?1:-1;
    
   }
+  //create a conversation based on the message I sent and received
   function createConversation(paras){
     let conversations = {};
     paras.messages.forEach(m=>{
@@ -144,8 +154,6 @@ T.get('account/verify_credentials', { skip_status: true })
      res.render('index',paras);
   });
   io.sockets.on('connection', function (socket) {
-    //socket.emit('message', 'You are connected!');
-
     // When the server receives a “message” type signal from the client   
     socket.on('message', function (newTweet) {
       T.post('statuses/update', { status: newTweet}, function(err, data, response) {
